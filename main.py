@@ -23,20 +23,38 @@ import PaymentCards
 database functions
 '''
 
-'''directories'''
-working_dir = os.getcwd() + '\mmef_python-project'
-db_dir = working_dir + '\database'
-customers_dir = db_dir + '\db_customers.csv'
-# orders_dir = db_dir + '\db_orders.csv'
-paymentcards_dir = db_dir + '\db_paymentcards.csv'
-# promocodes_dir = db_dir + '\db_promocodes.csv'
+'''retrieve database information'''
 
+def get_dbdirectory(db):
+    '''
+    db - customers or paymentcards
+    returns directory of db
+    '''
+    working_dir = os.getcwd()
+    db_dir = working_dir + '\database'
+    
+    if db == 'customers':
+        customers_dir = db_dir + '\db_customers.csv'
+        return customers_dir
 
-'''dataframes from database'''
-df_customers = pd.read_csv(customers_dir)
-# df_packages = pd.read_csv(orders_dir)
-df_paymentcards = pd.read_csv(paymentcards_dir) 
-# df_promocodes = pd.read_csv(promocodes_dir)
+def get_dbasdf(db):
+    '''
+    get db as df
+    db - customers or paymentcards
+    returns df of db
+    '''
+    if db == 'customers':
+        customers_dir = get_dbdirectory('customers')
+        df_customers = pd.read_csv(customers_dir)
+        return df_customers
+    elif db == '':
+           # orders_dir = db_dir + '\db_orders.csv'
+        # paymentcards_dir = db_dir + '\db_paymentcards.csv'
+        # promocodes_dir = db_dir + '\db_promocodes.csv'
+        # df_packages = pd.read_csv(orders_dir)
+        # df_paymentcards = pd.read_csv(paymentcards_dir) 
+        # df_promocodes = pd.read_csv(promocodes_dir)
+        return ''
 
 
 def user_id_format(user_id):
@@ -47,23 +65,23 @@ def user_id_format(user_id):
     return str(user_id).rjust(9,'0')
 
 
-def retrieve_list_from_db(database, item):
+def retrieve_list_from_db(df, item):
     '''
     function that retrieves lists of column values in csv database 
     parameters: database - dataframe of csv file. Of form df_name
                 item - column name we want in list
     '''
     if item == "User_id":
-        retrieved_list = database[item].to_list()
+        retrieved_list = df[item].to_list()
         for i in range(len(retrieved_list)):
             retrieved_list[i] = user_id_format(retrieved_list[i])
     else:
-        retrieved_list = database[item].to_list()
+        retrieved_list = df[item].to_list()
     
     return retrieved_list
 
 
-def call_customer_from_db(identifier, use_username = True, df = df_customers):
+def call_customer_from_db(identifier, use_username = True):
     '''
     creates a Customer instance using unique username or user_id identifier
     which it queries from database
@@ -71,33 +89,41 @@ def call_customer_from_db(identifier, use_username = True, df = df_customers):
                     use_username - True if provided username, False if provided user_id
                     df - defaults to df_customers, but wouldn't work for other df
     '''   
+    df = get_dbasdf('customers')
     if use_username is True:
         row = df[df['Username']==identifier]
         username = identifier
-        user_id = user_id_format(row['User_id'][0])
+        user_id = user_id_format(row['User_id'].iloc[0])
     else:
         identifier = int(identifier)
         row = df[df['User_id']==identifier]
-        username = row['Username'][0]
+        username = row['Username'].iloc[0]
         user_id = user_id_format(identifier)
 
-    firstname = row['Name'][0]
-    surname = row['Surname'][0]
-    password = row['Password'][0]
+    firstname = row['Name'].iloc[0]
+    surname = row['Surname'].iloc[0]
+    password = row['Password'].iloc[0]
 
     customer = Customers.Customers(firstname, surname, username, user_id, password)
 
     return customer
 
 
-def add_customer_to_db(customer, database = df_customers):
+def add_customer_to_db(customer):
     '''
     add customer to db_customers.csv using customer instance
     '''
+    customers_dir = get_dbdirectory('customers')
+    df = get_dbasdf('customers')
+    customer_details = customer.get_detailslist()
+    column_names = list(df)
+    df_newcustomer = pd.DataFrame([customer_details], columns = column_names)
+    df = pd.concat([df, df_newcustomer], ignore_index = False)
+    df.to_csv(customers_dir, index = False)
 
-    print('to-be-built')
 
-
+# customer = Customers.Customers('Alex', 'Tester', 'tester', '000000003', 'test')
+# add_customer_to_db(customer)
 ###################################################################################################
 '''
 printing/formating functions
@@ -210,6 +236,7 @@ def info_prompt_check(request, requests = [], is_signup = True, back_to = ''):
     while(True):
         print_bars()
         try:
+            print(count)
             prompt = input(f'{request}: ')
             if request == 'User_id':
                 prompt = user_id_format(prompt)
@@ -227,21 +254,23 @@ def info_prompt_check(request, requests = [], is_signup = True, back_to = ''):
                     print_bars()
                     print(f'{request} provided invalid. 3 attempts failed.')
                     last_menu(back_to)
+                    exit() # added after below
                 else:
                     return prompt
             else:
-                if prompt in requests:
+                if prompt in requests and count < 2:
                     return prompt
                 elif count == 2:
                     print_bars()
                     print(f'{request} provided invalid. 3 attempts failed.')
                     last_menu(back_to)
+                    exit()
                 else:
                     count += 1
                     print_bars()
                     print(f'{request} provided not valid - please try again.')
-                    print(request)
-                    print(requests)
+                    # print(request)
+                    # print(requests)
         else:
             return prompt
 
@@ -271,6 +300,7 @@ def info_prompt_hidden(request, requests = [], back_to = ''):
                 print_bars()
                 print(f'{request} provided invalid. 3 attempts failed.')
                 last_menu(back_to)    
+                exit() # added
             else:
                 count += 1
                 print_bars()
@@ -292,6 +322,7 @@ menu functions
 def welcome_menu():
     '''
     welcome menu steps: asks user whether signing in or signing up
+    returns customer instance
     '''
     welcome_menu_dic = { # see form under option_menu()
         0 : print_welcome_menu,
@@ -304,8 +335,13 @@ def welcome_menu():
     }
 
     next_menu = option_menu(welcome_menu_dic)
+
+    if next_menu == 1: 
+        customer = signin_menu()
+    elif next_menu == 2:
+        customer = signup_menu()
     
-    return next_menu
+    return customer
 
 
 def signin_menu():
@@ -317,6 +353,8 @@ def signin_menu():
     print_bars()
     print('Signing back in:')
 
+    df = get_dbasdf('customers')
+
     signin_menu_dic = { # see form under option_menu()
         0 : print_username_or_id,
         1 : [1], # username
@@ -326,16 +364,16 @@ def signin_menu():
         print_bars,
         welcome_menu]
     }
-
     unique_identifier = option_menu(signin_menu_dic)
     if unique_identifier == 1:
-        usernames = retrieve_list_from_db(df_customers, 'Username')
-        username = info_prompt_check('Username', usernames, False, 'signin')
+        usernames = retrieve_list_from_db(df, 'Username')
+        username = info_prompt_check('Username', usernames, False, 'welcome')
         customer = call_customer_from_db(username)
     elif unique_identifier == 2:
-        user_ids = retrieve_list_from_db(df_customers, 'User_id')
-        user_id = info_prompt_check('User_id', user_ids, False, 'signin')
+        user_ids = retrieve_list_from_db(df, 'User_id')
+        user_id = info_prompt_check('User_id', user_ids, False, 'welcome')
         customer = call_customer_from_db(user_id, False)
+        username = customer.get_username()
     
     check_password = customer.get_password()
 
@@ -345,7 +383,7 @@ def signin_menu():
     print(f'Welcome back, {username} !')
     print(customer)
     
-    return customer
+    # return customer
 
 
 def signup_menu():
@@ -353,22 +391,26 @@ def signup_menu():
     menu for new customer signup to get information necessary for customer class
     returns customer instance
     '''
-    usernames = retrieve_list_from_db(df_customers, 'Username')
+    df = get_dbasdf('customers')
+    usernames = retrieve_list_from_db(df, 'Username')
     firstname = info_prompt_check('Name')
     surname = info_prompt_check('Surname')
-    username = info_prompt_check('Username', usernames, True, 'signup')
+    username = info_prompt_check('Username', usernames, True, 'welcome')
     password = info_prompt_hidden('Password')
  
-    user_ids = retrieve_list_from_db(df_customers, 'User_id')
+    user_ids = retrieve_list_from_db(df, 'User_id')
     max_id = 0
     for ids in user_ids:
         ids = int(ids)
         if ids > max_id:
             max_id = ids
+    # temporarily string instead of integer in db, but causes no issues
     user_id = user_id_format(max_id + 1)
     
     customer = Customers.Customers(firstname, surname, username, user_id, password)
     
+    add_customer_to_db(customer)
+
     print_bars()
     print(f'Welcome, {username} !')
     print(customer)
@@ -402,14 +444,10 @@ def last_menu(menu):
         print('Back to function called without adequate parameters set')
         print_bars()    
 
+# signin_menu()
 ###################################################################################################
 if __name__ == '__main__':
-    next_menu = welcome_menu()
-    
-    if next_menu == 1: 
-        customer = signin_menu()
-    elif next_menu == 2:
-        customer = signup_menu()
+    customer = welcome_menu()
 
     next_menu = customer_menu()
 

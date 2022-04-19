@@ -35,15 +35,9 @@ class Customers:
     def get_password(self):
         return self.password
 
-    def get_user_id(self):
+    def get_userid(self):
         return self.user_id
+    
+    def get_detailslist(self):
+        return [self.user_id, self.firstname, self.surname, self.username, self.password]
 
-def print_bars():
-    '''
-    printing functions used to enhance display
-    '''
-    print('----------------------------------------------------------------------------------------')
-
-
-
-        
