@@ -1,21 +1,24 @@
 """
-title: python project - KMX Shipping Platform
+title: python project - KMX Shipping Platform, main module
 
-authors:        Thomas Konigkramer
+authors:        Thomas Konigkramer  
 
-contributors:   
-
+1 -- databases
+2 -- printing and formating
+3 -- user prompts and information validation
+4 -- menues
 """
 
-## importing python packages
+'''importing python packages'''
 import pandas as pd
 import getpass
 import os
 
-## importing custom classes and modules
+'''importing custom classes and modules'''
 import Customers
+import PaymentCards
 
-
+###################################################################################################
 '''
 database functions
 '''
@@ -24,15 +27,15 @@ database functions
 working_dir = os.getcwd() + '\mmef_python-project'
 db_dir = working_dir + '\database'
 customers_dir = db_dir + '\db_customers.csv'
-orders_dir = db_dir + '\db_orders.csv'
-# giftcards_dir = db_dir + '\db_giftcards.csv'
+# orders_dir = db_dir + '\db_orders.csv'
+paymentcards_dir = db_dir + '\db_paymentcards.csv'
 # promocodes_dir = db_dir + '\db_promocodes.csv'
 
 
 '''dataframes from database'''
 df_customers = pd.read_csv(customers_dir)
 # df_packages = pd.read_csv(orders_dir)
-# df_giftcards = pd.read_csv(giftcards_dir) 
+df_paymentcards = pd.read_csv(paymentcards_dir) 
 # df_promocodes = pd.read_csv(promocodes_dir)
 
 
@@ -42,6 +45,7 @@ def user_id_format(user_id):
     converts number from db to have leading zeros
     '''
     return str(user_id).rjust(9,'0')
+
 
 def retrieve_list_from_db(database, item):
     '''
@@ -58,11 +62,8 @@ def retrieve_list_from_db(database, item):
     
     return retrieved_list
 
-def add_customer_to_db(customer, database = df_customers):
-    print('to-be-built')
 
-
-def call_customer(identifier, use_username = True, df = df_customers):
+def call_customer_from_db(identifier, use_username = True, df = df_customers):
     '''
     creates a Customer instance using unique username or user_id identifier
     which it queries from database
@@ -89,6 +90,15 @@ def call_customer(identifier, use_username = True, df = df_customers):
     return customer
 
 
+def add_customer_to_db(customer, database = df_customers):
+    '''
+    add customer to db_customers.csv using customer instance
+    '''
+
+    print('to-be-built')
+
+
+###################################################################################################
 '''
 printing/formating functions
 '''
@@ -112,6 +122,7 @@ def print_welcome_menu():
     print('3 -- Exit')
     print_bars()
 
+
 def print_username_or_id():
     '''
     printing function
@@ -134,11 +145,10 @@ def print_customer_menu():
     print('2 -- View orders in progress')
     print('3 -- View order history')
     print('4 -- View my gift card balance')
-    print('5 -- View promo codes used')
-    print('6 -- Return to previous menu')
+    print('5 -- Return to previous menu')
     print_bars()
 
-
+###################################################################################################
 '''
 functions used for option menus and prompts from users
 '''
@@ -186,6 +196,7 @@ def option_menu(menu):
         else:
             print_bars()
             print(f'Invalid option. Please enter a number between 1 and {no_options}.')
+
 
 def info_prompt_check(request, requests = [], is_signup = True, back_to = ''):
     '''
@@ -273,7 +284,7 @@ def info_prompt_hidden(request, requests = [], back_to = ''):
             else:
                 return prompt
 
-
+###################################################################################################
 '''
 menu functions
 '''
@@ -320,11 +331,11 @@ def signin_menu():
     if unique_identifier == 1:
         usernames = retrieve_list_from_db(df_customers, 'Username')
         username = info_prompt_check('Username', usernames, False, 'signin')
-        customer = call_customer(username)
+        customer = call_customer_from_db(username)
     elif unique_identifier == 2:
         user_ids = retrieve_list_from_db(df_customers, 'User_id')
         user_id = info_prompt_check('User_id', user_ids, False, 'signin')
-        customer = call_customer(user_id, False)
+        customer = call_customer_from_db(user_id, False)
     
     check_password = customer.get_password()
 
@@ -336,6 +347,7 @@ def signin_menu():
     
     return customer
 
+
 def signup_menu():
     '''
     menu for new customer signup to get information necessary for customer class
@@ -346,8 +358,7 @@ def signup_menu():
     surname = info_prompt_check('Surname')
     username = info_prompt_check('Username', usernames, True, 'signup')
     password = info_prompt_hidden('Password')
-    # confirm all good
-    # assign user_id
+ 
     user_ids = retrieve_list_from_db(df_customers, 'User_id')
     max_id = 0
     for ids in user_ids:
@@ -391,6 +402,7 @@ def last_menu(menu):
         print('Back to function called without adequate parameters set')
         print_bars()    
 
+###################################################################################################
 if __name__ == '__main__':
     next_menu = welcome_menu()
     
@@ -399,5 +411,16 @@ if __name__ == '__main__':
     elif next_menu == 2:
         customer = signup_menu()
 
+    next_menu = customer_menu()
 
+    if next_menu == 1:
+        print('new order')
+    elif next_menu == 2:
+        print('orders in progress')
+    elif next_menu == 3:
+        print('oder history')
+    elif next_menu == 4:
+        print('add gift card/payment card')
+    elif next_menu == 5:
+        print('view payment cards')
     

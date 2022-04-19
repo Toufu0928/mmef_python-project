@@ -1,3 +1,11 @@
+"""
+title: python project - KMX Shipping Platform, Customers class
+
+authors:        Thomas Konigkramer  
+
+Customer class
+"""
+
 class Customers:
     '''
     A class to handle a customer's attributes
@@ -36,11 +44,6 @@ def print_bars():
     '''
     print('----------------------------------------------------------------------------------------')
 
-    
-
-
-
-'''create an instance'''
 
 
         
