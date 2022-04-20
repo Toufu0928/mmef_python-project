@@ -1,3 +1,12 @@
+"""
+title : python project KMX Shipping Platform, Discounting
+
+author: Sukanya Mukherjee
+
+Discounts and Taxes
+"""
+
+
 import price
 class Discount:
     def __init__(self, discount, type, validity, discountedamount):
