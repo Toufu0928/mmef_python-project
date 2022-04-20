@@ -20,7 +20,7 @@ class Customers:
 
     def __str__(self):
         bars = '----------------------------------------------------------------------------------------\n'
-        summary_message = bars + f'User details:\n' + bars + f'User ID     : {self.user_id}\nUsername    : {self.username}\nFirst name  : {self.firstname}\nSurname     : {self.surname}'
+        summary_message = bars + f'User details:\nUser ID     : {self.user_id}\nUsername    : {self.username}\nFirst name  : {self.firstname}\nSurname     : {self.surname}'
         return summary_message
 
     def get_firstname(self):
@@ -40,4 +40,5 @@ class Customers:
     
     def get_detailslist(self):
         return [self.user_id, self.firstname, self.surname, self.username, self.password]
+
 

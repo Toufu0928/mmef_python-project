@@ -109,21 +109,29 @@ def call_customer_from_db(identifier, use_username = True):
     return customer
 
 
-def add_customer_to_db(customer):
+def modify_db(instance, db):
     '''
-    add customer to db_customers.csv using customer instance
+    modify db - takes class and updates relevant csv
+    parameters: instance - is a module (customer, paymentcard, etc.)
+                db - name of database to write to
     '''
-    customers_dir = get_dbdirectory('customers')
-    df = get_dbasdf('customers')
-    customer_details = customer.get_detailslist()
-    column_names = list(df)
-    df_newcustomer = pd.DataFrame([customer_details], columns = column_names)
-    df = pd.concat([df, df_newcustomer], ignore_index = False)
-    df.to_csv(customers_dir, index = False)
+    if db == 'customers':
+        customers_dir = get_dbdirectory(db)
+        df = get_dbasdf(db)
+        customer_details = customer.get_detailslist()
+        column_names = list(df)
+        df_newcustomer = pd.DataFrame([customer_details], columns = column_names)
+        df = pd.concat([df, df_newcustomer], ignore_index = False)
+        df.to_csv(customers_dir, index = False)
+    
+    elif db == 'paymentcards':
+        print('to-do')
+        # if payment card exists, then update amount
+        # else - i.e. doesn't exist - then add
 
 
 # customer = Customers.Customers('Alex', 'Tester', 'tester', '000000003', 'test')
-# add_customer_to_db(customer)
+# modify_db(customer, 'customers')
 ###################################################################################################
 '''
 printing/formating functions
@@ -236,7 +244,6 @@ def info_prompt_check(request, requests = [], is_signup = True, back_to = ''):
     while(True):
         print_bars()
         try:
-            print(count)
             prompt = input(f'{request}: ')
             if request == 'User_id':
                 prompt = user_id_format(prompt)
@@ -383,7 +390,7 @@ def signin_menu():
     print(f'Welcome back, {username} !')
     print(customer)
     
-    # return customer
+    return customer
 
 
 def signup_menu():
@@ -409,7 +416,7 @@ def signup_menu():
     
     customer = Customers.Customers(firstname, surname, username, user_id, password)
     
-    add_customer_to_db(customer)
+    modify_db(customer, 'customers')
 
     print_bars()
     print(f'Welcome, {username} !')
@@ -418,12 +425,20 @@ def signup_menu():
     return customer
 
 
-def customer_menu():
+def new_paymentcard():
     print('')
 
 
+def display_paymentcards():
+    print('')
 
 
+def use_paymentcard():
+    print('')
+
+
+def customer_menu():
+    print('')
 
 
 def last_menu(menu):
@@ -439,6 +454,7 @@ def last_menu(menu):
         print_bars()
         print('Returning to Sign-up Menu')
         signup_menu()
+    # elif payment:
     elif menu == '':
         print_bars()
         print('Back to function called without adequate parameters set')
@@ -462,3 +478,4 @@ if __name__ == '__main__':
     elif next_menu == 5:
         print('view payment cards')
     
+
